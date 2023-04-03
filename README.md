@@ -5,32 +5,28 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
-
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/jakearmijo/aiRN">
+  <a href="https://github.com/jakearmijo/airn-ts">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Best-README-Template</h3>
+  <h3 align="center">Life Coach App</h3>
 
   <p align="center">
-    An awesome README template to jumpstart your projects!
+    This project allows users to text a number and received response from ChatGPT.
     <br />
-    <a href="https://github.com/jakearmijo/aiRN"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/jakearmijo/airn-ts"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/jakearmijo/aiRN">View Demo</a>
+    <a href="https://github.com/jakearmijo/airn-ts">View Demo</a>
     ·
-    <a href="https://github.com/jakearmijo/aiRN/issues">Report Bug</a>
+    <a href="https://github.com/jakearmijo/airn-ts/issues">Report Bug</a>
     ·
-    <a href="https://github.com/jakearmijo/aiRN/issues">Request Feature</a>
+    <a href="https://github.com/jakearmijo/airn-ts/issues">Request Feature</a>
   </p>
 </p>
-
-
 
 <!-- TABLE OF CONTENTS -->
 <details open="open">
@@ -61,19 +57,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+The life coaching service has created an innovative application using various technologies such as Node.js, Express, Twilio Node, ChatGPT Node, Stripe, and MongoDB. This application provides an easy and accessible way for users to get in touch with their life coach by simply texting a Twilio number. Once a message is sent, the application utilizes ChatGPT Node to generate a response that is tailored to the user's needs. In addition to the messaging feature, the application also integrates with Stripe for secure payment processing and MongoDB for efficient data storage. With the help of this application, users can receive personalized coaching and guidance at their convenience without any hassle.
 
-There are many great README templates available on GitHub, however, I didn't find one that really suit my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
-
-Here's why:
-
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should element DRY principles to the rest of your life :smile:
-
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have have contributed to expanding this template!
-
-A list of commonly used resources that I find helpful are listed in the acknowledgements.
+To facilitate ease of deployment, the application has been containerized with Docker and deployed using the AWS CDK on AWS ECS. The application has been defined inside ECS task definitions and container definitions, and it runs on AWS Fargate. An application load balancer has been set up to distribute incoming traffic evenly across the application's instances. This ensures that users can access the application quickly and efficiently, regardless of their location. By leveraging the power of AWS, the life coaching service has developed a highly scalable and reliable application that delivers a seamless experience to its users.
 
 ### Built With
 
@@ -84,6 +70,7 @@ This section should list any major frameworks that you built your project using.
 * [Twilio](https://www.twilio.com/)
 * [Docker](https://www.docker.com/)
 * [MongoDB](https://www.mongodb.com/)
+* [Stripe](https://www.stripe.com/)
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -103,11 +90,16 @@ This is an example of how to list things you need to use the software and how to
 
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
+1. Get a API Keys and Create Accounts
+    * [https://platform.openai.com/account/api-keys](OpenAI)
+    * [https://www.twilio.com/try-twilio](Twilio)
+    * [https://www.mongodb.com/cloud/atlas/register](MongoDB)
+    * [https://sendblue.co/signup](SendBlue)
+
 2. Clone the repo
 
    ```sh
-   git clone https://github.com/jakearmijo/aiRN.git
+   git clone https://github.com/jakearmijo/airn-ts.git
    ```
 
 3. Install NPM packages
@@ -116,23 +108,50 @@ This is an example of how to list things you need to use the software and how to
    npm install
    ```
 
-4. Enter your API in `config.js`
+4. Enter your API in a `.env` file
 
-   ```JS
-   const API_KEY = 'ENTER YOUR API';
-   ```
+    ```text
+      OPENAI_API_KEY=Enter_Value
+      ACCOUNT_SID=Enter_Value
+      AUTH_TOKEN=Enter_Value
+      MONGODB_USERNAME=Enter_Value
+      MONGODB_PASSWORD=Enter_Value
+      MONGODB_UR=Enter_Value
+      SEND_BLUE_API_KEY=Enter_Value
+      SEND_BLUE_SECRET=Enter_Value
+      STRIPE_TEST_SECRET_KEY=sEnter_Value
+    ```
 
+5. Build Docker container
+
+    ```sh
+      docker build -t jakearmijo/life-coach-app-airn-ts .
+    ```
+
+6. Run the Docker image
+
+    ```sh
+      docker run --rm --env-file=./.env -p 80:80 --name=enter_a_image_name_here jakearmijo/life-coach-app-airn-ts
+    ```
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Here are a few examples of how the life coaching application described above can be used:
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+1. A user who is feeling stressed out and overwhelmed can send a message to the Twilio number to receive guidance and support from their life coach. The ChatGPT Node integration allows the application to generate a personalized response that addresses the user's specific concerns and offers practical advice for managing their stress.
+
+2. A user who wants to improve their productivity can text the Twilio number to receive tips and strategies from their life coach. The application can leverage ChatGPT Node to provide customized advice based on the user's goals and preferences, helping them to achieve greater efficiency and focus.
+
+3. A user who is struggling with a difficult decision can reach out to their life coach via the Twilio number to receive guidance and support. The application can use ChatGPT Node to help the user clarify their thoughts and feelings, and to explore different options and outcomes for their decision.
+
+4. A user who wants to book a coaching session can use the integrated Stripe payment processing to easily and securely pay for their appointment. The application can leverage MongoDB to manage scheduling and other administrative tasks, ensuring a seamless and convenient experience for the user.
+
+Overall, the life coaching application described above provides a powerful and flexible tool for users to connect with their coach, receive personalized guidance and support, and manage their coaching sessions and payments with ease.
 
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/jakearmijo/aiRN/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/jakearmijo/airn-ts/issues) for a list of proposed features (and known issues).
 
 <!-- LICENSE -->
 ## License
@@ -142,14 +161,17 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Contact - [Jake Armijo](https://www.linkedin.com/in/jake-armijo/) - armijojake@yahoo.com
-Contact - [John Affolter](https://www.linkedin.com/in/john-a-27940242/) - johnaffolter279@gmail.com
+Contact - [Jake Armijo](https://www.linkedin.com/in/jake-armijo/) - jakearmijo@chatgptmvp.com
+Contact - [John Affolter](https://www.linkedin.com/in/john-a-27940242/) - johnaffolter@chatgptmvp.com
 
-Project Link: [https://github.com/jakearmijo/aiRN](https://github.com/jakearmijo/aiRN)
+Project Link: [https://github.com/jakearmijo/airn-ts](https://github.com/jakearmijo/airn-ts)
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
+* [Jake Armijo](https://www.jakearmijo.com/)
+* [John Affolter](https://www.linkedin.com/in/john-a-27940242/)
+* [Ryan Negri](https://ryannegri.com/)
 * [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
 * [Img Shields](https://shields.io)
 * [Choose an Open Source License](https://choosealicense.com)
@@ -165,15 +187,14 @@ Project Link: [https://github.com/jakearmijo/aiRN](https://github.com/jakearmijo
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/jakearmijo/aiRN.svg?style=for-the-badge
-[contributors-url]: https://github.com/jakearmijo/aiRN/graphs/contributors
+[contributors-url]: https://github.com/jakearmijo/airn-ts/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/jakearmijo/aiRN.svg?style=for-the-badge
-[forks-url]: https://github.com/jakearmijo/aiRN/network/members
+[forks-url]: https://github.com/jakearmijo/airn-ts/network/members
 [stars-shield]: https://img.shields.io/github/stars/jakearmijo/aiRN.svg?style=for-the-badge
-[stars-url]: https://github.com/jakearmijo/aiRN/stargazers
+[stars-url]: https://github.com/jakearmijo/airn-ts/stargazers
 [issues-shield]: https://img.shields.io/github/issues/jakearmijo/aiRN.svg?style=for-the-badge
-[issues-url]: https://github.com/jakearmijo/aiRN/issues
+[issues-url]: https://github.com/jakearmijo/airn-ts/issues
 [license-shield]: https://img.shields.io/github/license/jakearmijo/aiRN.svg?style=for-the-badge
-[license-url]: https://github.com/jakearmijo/aiRN/blob/master/LICENSE.txt
+[license-url]: https://github.com/jakearmijo/airn-ts/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/jake-armijo
-[product-screenshot]: images/screenshot.png
