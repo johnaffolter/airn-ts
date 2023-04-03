@@ -7,10 +7,7 @@ import UserInteraction from "../models/userInteraction";
 import { createStripeCustomer } from "./payments.controller";
 
 interface ReqBody {
-  From: string;
-  FromCity: string;
-  FromState: string;
-  FromZip: string;
+  number: string;
 }
 
 // const password: string = "mypass123";
@@ -223,7 +220,7 @@ export const createNewUser = async (
   const user = new User({
     firstName: req.body.firstName || "N/A",
     lastName: req.body.lastName || "N/A",
-    phoneNumber: req.body.phoneNumber,
+    phoneNumber: req.body.phoneNumber || req.body.number,
     tier: "Free",
     messageCount: 0,
     fromCity: req.body.fromCity || "N/A",
@@ -238,10 +235,6 @@ export const createNewUser = async (
   try {
     const newStripeCustomer = await createStripeCustomer(user);
     user.stripeId = newStripeCustomer.id;
-    console.log(
-      "🚀🚀🚀🚀 ~ file: users.controller.js:209 ~ createNewUser ~ user.stripeId :",
-      user.stripeId
-    );
     await user.save();
     res.status(201).json({
       message: "User Created",
@@ -304,29 +297,54 @@ export const createNewUserInteraction = async (userInteraction: any) => {
   }
 };
 
-export const updateUserFromText = async (reqBody: ReqBody) => {
+export const updateOrCreateUserFromText = async (reqBody: ReqBody) => {
   console.log("TRYING TO UPDATE USER FROM TEXT MESSAGE");
-  const { From, FromCity, FromState, FromZip } = reqBody;
+  const { number } = reqBody;
 
   try {
-    const user: any = User.findOne({ phoneNumber: From });
+    const user: any = User.findOne({ phoneNumber: number });
+    console.log(
+      "🚀🚀🚀🚀 ~ file: users.controller.ts:313 ~ updateOrCreateUserFromText ~ user:",
+      user || "NO USER"
+    );
 
-    if (!user.stripeId) {
+    if (!user) {
+      // create a user
+      const user = new User({
+        firstName: "N/A",
+        lastName: "N/A",
+        phoneNumber: number,
+        tier: "Free",
+        messageCount: 1,
+        fromCity: "N/A",
+        fromState: "N/A",
+        fromZip: "N/A",
+        signUpDate: new Date(),
+        userEmail: `${uuidv4()}@life-coach-airn.com`,
+        stripeId: "N/A",
+      });
+      const newStripeCustomer: any = createStripeCustomer(user);
+      user.stripeId = newStripeCustomer.id;
+      const new_user = await user.save();
+      console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:329 ~ updateOrCreateUserFromText ~ new_user:", new_user)
+      console.log("CREATED NEW USER IN MONGO & STRIPE VIA updateOrCreateUserFromText");
+    } else if (!user.stripeId || user.stripeId === "N/A") {
       const newStripeCustomer: any = createStripeCustomer(user);
       user.stripeId = newStripeCustomer.id;
       user.messageCount = user.messageCount += 1;
-      user.fromCity = user.fromCity == "N/A" ? user.fromCity : FromCity;
-      user.fromState = user.fromState == "N/A" ? user.fromState : FromState;
-      user.fromZip = user.fromZip == "N/A" ? user.FromZip : FromZip;
-      await user.save();
-      console.log("UPDATED USER & CREATED STRIPE CUSTOMER FROM TEXT MESSAGE");
+      const updated_user = await user.save();
+      console.log(
+        "🚀🚀🚀🚀 ~ file: users.controller.ts:346 ~ updateOrCreateUserFromText ~ STRIPE ID - updated_user:",
+        updated_user
+      );
+      console.log(
+        "UPDATED USER MSG COUNT & CREATED STRIPE CUSTOMER FROM TEXT MESSAGE"
+      );
     } else {
       user.messageCount = user.messageCount += 1;
-      user.FromCity = FromCity;
-      user.fromState = FromState;
-      user.fromZip = FromZip;
-      await user.save();
-      console.log("UPDATED USER FROM TEXT MESSAGE");
+      const updated_user = await user.save();
+      console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:346 ~ updateOrCreateUserFromText ~ updated_user:", updated_user)
+      console.log("UPDATED USER MSG COUNT FROM TEXT MESSAGE");
     }
   } catch (err) {
     console.error("ERROR UPDATING USER FROM TEXT MESSAGE");

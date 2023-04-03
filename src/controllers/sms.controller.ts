@@ -4,7 +4,7 @@ import { Configuration, OpenAIApi } from "openai";
 import SendblueClient from "../sendblue/lib";
 
 import {
-  updateUserFromText,
+  updateOrCreateUserFromText,
   createNewUserInteraction,
 } from "../controllers/users.controller";
 import User from "../models/user";
@@ -26,14 +26,12 @@ const openai = new OpenAIApi(configuration);
 export const post = async (req: express.Request, res: express.Response) => {
   console.log("🚀🚀🚀🚀 ~ file: sms.controller.js:16 ~ post ~ req:", req);
   const twimlMsg = new twiml.MessagingResponse();
-  const userRequest = req.body.Body || "";
-  const userPhoneNumber = req.body.From;
+  const userRequest = req.body.content || "";
+  const userPhoneNumber = req.body.number;
   console.log(
     "🚀🚀🚀🚀 ~ file: sms.controller.js:14 ~ post ~ req.body:",
     req.body
   );
-
-  const singleUser = await User.findOne({ phoneNumber: userPhoneNumber });
 
   if (userRequest.trim().length === 0) {
     // twimlMsg.message("Please enter a valid prompt.");
@@ -82,7 +80,7 @@ export const post = async (req: express.Request, res: express.Response) => {
       };
 
       createNewUserInteraction(userInteraction);
-      updateUserFromText(req.body);
+      updateOrCreateUserFromText(req.body);
     } catch (err) {
       if (err.response) {
         console.error(err.response.status, err.response.data);
