@@ -90,6 +90,10 @@ This is an example of how to list things you need to use the software and how to
 
 ### Installation
 
+You must have the architecture deployed into your AWS Account for App to work. You can grab the cdk code from the link below?
+
+* [https://github.com/jakearmijo/aiRN-infrastructure](InfrastructureCode)
+
 1. Get a API Keys and Create Accounts
     * [https://platform.openai.com/account/api-keys](OpenAI)
     * [https://www.twilio.com/try-twilio](Twilio)
