@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "esModuleInterop": true,
+    "target": "ES6",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "build",
+    "rootDir": "src",
+    "forceConsistentCasingInFileNames": true
+  },
+  "lib": ["ES2020"],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", ".vscode"],
+  "baseUrl": ".",
+  "paths": {
+    "*": ["src/*"] // Here... try with correct values and the issue should get fixed
+  }
+}
