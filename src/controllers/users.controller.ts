@@ -1,67 +1,108 @@
 import express from "express";
-// import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
+import { jsonwebtoken as jwt } from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 
 import User from "../models/user";
 import UserInteraction from "../models/userInteraction";
 import { createStripeCustomer } from "./payments.controller";
 
-// const password: string = "mypass123";
-// const saltRounds: number = 10;
 
-// bcrypt.genSalt(saltRounds, function (saltError: any, salt) {
-//   if (saltError) {
-//     throw saltError;
-//   } else {
-//     bcrypt.hash(password, salt, function (hashError, hash) {
-//       if (hashError) {
-//         throw hashError;
-//       } else {
-//         console.log(hash);
-//         //$2a$10$FEBywZh8u9M0Cec/0mWep.1kXrwKeiWDba6tdKvDfEBjyePJnDT7K
-//       }
-//     });
-//   }
-// });
+export const userSignUp = (req: express.Request, res: express.Response) => {
+  const { password, userEmail, phoneNumber } = req.body;
+  bcrypt
+    .hash(password, 10)
+    .then(async (hashedPassword) => {
+      // find a user from db
+      const user = await User.findOne({ phoneNumber: phoneNumber });
+      if (user) {
+        user.password = hashedPassword;
+        user.userEmail = userEmail;
+        user
+          .save()
+          .then((result) => {
+            res.status(201).send({
+              message: "User Password Updated Successfully",
+              result,
+            });
+          })
+          .catch((error) => {
+            res.status(500).send({
+              message: "Error creating user",
+              error,
+            });
+          });
+      } else {
+        const new_user = await createNewUser(req, res);
+        new_user.password = hashedPassword;
+        user.userEmail = userEmail;
+        user
+          .save()
+          .then((result) => {
+            res.status(201).send({
+              message: "User Password Created Successfully",
+              result,
+            });
+          })
+          .catch((error) => {
+            res.status(500).send({
+              message: "Error creating user password",
+              error,
+            });
+          });
+      }
+    })
+    .catch((e) => {
+      res.status(500).send({
+        message: "Password was not hashed successfully",
+        e,
+      });
+    });
+};
 
-// If you provide a password that matches the
-// original password used to create the hash, the following message should be logged:
-// const passwordEnteredByUser: string = "mypass123";
-// const hash: string =
-//   "$2a$10$FEBywZh8u9M0Cec/0mWep.1kXrwKeiWDba6tdKvDfEBjyePJnDT7K";
-
-// bcrypt.compare(passwordEnteredByUser, hash, function (error, isMatch) {
-//   if (error) {
-//     throw error;
-//   } else if (!isMatch) {
-//     console.log("Password doesn't match!");
-//   } else {
-//     console.log("Password matches!");
-//   }
-// });
-
-// const userLogin = async (req: express.Request, res) => {
-//   const userEmail = req.body.userEmail;
-//   const password = req.body.password;
-//   const user: any = await User.findOne({ userEmail: userEmail });
-//   User.findOne({ userEmail: userEmail }).exec(function (error, user) {
-//     if (error) {
-//       callback({ error: true });
-//     } else if (!user) {
-//       callback({ error: true });
-//     } else {
-//       user.comparePassword(password, function (matchError, isMatch) {
-//         if (matchError) {
-//           callback({ error: true });
-//         } else if (!isMatch) {
-//           callback({ error: true });
-//         } else {
-//           callback({ success: true });
-//         }
-//       });
-//     }
-//   });
-// };
+export const userLogin = async (req: express.Request, res: express.Response) => {
+  const { userEmail, password } = req.body;
+  console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:98 ~ userLogin ~ password:", password)
+  User.findOne({ userEmail: userEmail })
+    .then(async (user) => {
+      console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:101 ~ .then ~ user:", user.password)
+      await bcrypt
+        .compare(password, user.password)
+        .then((passwordCheck) => {
+          if (!passwordCheck) {
+            return res.status(400).send({
+              message: "Password Check does not match",
+              Error,
+            });
+          }
+          const token = jwt.sign(
+            {
+              userId: user._id,
+              userEmail: user.userEmail,
+            },
+            "RANDOM-TOKEN",
+            { expiresIn: "24h" }
+          );
+          res.status(200).send({
+            message: "Login Successful",
+            userEmail: user.userEmail,
+            token,
+          });
+        })
+        .catch((Error) => {
+          res.status(400).send({
+            message: "Passwords do not match",
+            Error,
+          });
+        });
+    })
+    .catch((error) => {
+      res.status(404).send({
+        message: "Email not found",
+        error,
+      });
+    });
+};
 
 export const getUsers = async (req: express.Request, res: express.Response) => {
   console.log("TRYING TO FETCH USERS!");
@@ -80,6 +121,7 @@ export const getUsers = async (req: express.Request, res: express.Response) => {
         fromZip: user.fromZip || "N/A",
         signUpDate: user.signUpDate || "No Sign Up Date",
         userEmail: user.userEmail || "N/A",
+        password: "Password not shown",
         stripeId: user.stripeId || "N/A",
       })),
     });
@@ -133,7 +175,7 @@ export const getUserInteractions = async (
         userMessage: interaction.userMessage,
         chatGptResponse: interaction.chatGptResponse,
         interactionDate: interaction.interactionDate,
-        userId: interaction.userId
+        userId: interaction.userId,
       })),
     });
     console.log("FETCHED USER INTERACTIONS");
@@ -153,7 +195,10 @@ export const getSingleUserInteractions = async (
     const usersInteractions = await UserInteraction.find({
       userId: req.params.id,
     });
-    console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:156 ~ usersInteractions:", usersInteractions)
+    console.log(
+      "🚀🚀🚀🚀 ~ file: users.controller.ts:156 ~ usersInteractions:",
+      usersInteractions
+    );
     res.status(200).json({
       usersInteractions: usersInteractions.map((interaction) => ({
         userPhoneNumber: interaction.userPhoneNumber,
@@ -178,18 +223,19 @@ export const updateSingleUser = async (
   res: express.Response
 ) => {
   console.log("TRYING TO UPDATE USER");
-  const userID = req.params.id;
-  const userFirstName = req.body.firstName;
-  const userLastName = req.body.lastName;
-  const userPhoneNumber = req.body.phoneNumber;
+  const userID = req.params.id || "N/A";
+  const userFirstName = req.body.firstName || "N/A";
+  const userLastName = req.body.lastName || "N/A";
+  const userPhoneNumber = req.body.phoneNumber || "N/A";
   const userTierLevel = req.body.tier;
-  const userMessageCount = req.body.messageCount;
-  const userFromCity = req.body.fromCity;
-  const userFromState = req.body.fromState;
-  const userFromZip = req.body.fromZip;
-  const userSignUpDate = req.body.signUpDate;
-  const userEmail = req.body.userEmail;
-  const userStripeId = req.body.stripeId;
+  const userMessageCount = req.body.messageCount || "N/A";
+  const userFromCity = req.body.fromCity || "N/A";
+  const userFromState = req.body.fromState || "N/A";
+  const userFromZip = req.body.fromZip || "N/A";
+  const userSignUpDate = req.body.signUpDate || "N/A";
+  const userEmail = req.body.userEmail || "N/A";
+  const userPassword = req.body.password || "N/A";
+  const userStripeId = req.body.stripeId || "N/A";
 
   if (!userTierLevel || userTierLevel.trim().length === 0) {
     console.log("INVALID INPUT - NO TEXT OR MISSING FIELDS");
@@ -210,6 +256,7 @@ export const updateSingleUser = async (
         fromZip: userFromZip,
         signUpDate: userSignUpDate,
         userEmail: userEmail,
+        password: userPassword,
         stripeId: userStripeId,
       },
       { new: true }
@@ -228,6 +275,7 @@ export const updateSingleUser = async (
         fromZip: user.fromZip,
         signUpDate: user.signUpDate,
         userEmail: user.userEmail,
+        password: "password not shown",
         stripeId: user.stripeId,
       },
     });
@@ -255,6 +303,7 @@ export const createNewUser = async (
     fromZip: req.body.fromZip || "N/A",
     signUpDate: new Date(),
     userEmail: req.body.userEmail || `${uuidv4()}@life-coach-airn.com`,
+    password: "N/A",
     stripeId: req.body.stripeId || "N/A",
   });
   console.log("💾💾 CREATED NEW USER IN MONGO NOW TRYING STRIPE");
@@ -276,6 +325,7 @@ export const createNewUser = async (
         fromZip: user.fromZip,
         signUpDate: user.signUpDate,
         userEmail: user.userEmail,
+        password: "password not shown",
         stripeId: user.stripeId,
       },
     });

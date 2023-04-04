@@ -3,14 +3,20 @@ import { Schema, model, Document } from "mongoose";
 export interface UserInterface extends Document {
   firstName: string;
   lastName: string;
-  phoneNumber: string;
+  phoneNumber: {
+    type: string,
+    unique: [true, "Phone Number Exist"],
+  };
   tier: string
   messageCount: number;
   fromCity: string;
   fromState: string;
   fromZip: string;
   signUpDate: string;
-  userEmail: string;
+  userEmail: {
+    type: string,
+    unique: [true, "Email Exist"],
+  };
   password: string;
   stripeId: string;
 }

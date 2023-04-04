@@ -34,8 +34,14 @@ export const post = async (req: express.Request, res: express.Response) => {
   let userId = user._id;
 
   if (!user) {
-    let user = await createNewUser(req, res);
-    userId = user._id;
+    res.type("text/xml").send(
+      sendblueClient.sendMessage({
+        number: userPhoneNumber,
+        content: "Please visit Enter_link_to_website to sign up",
+      })
+    );
+    // let user = await createNewUser(req, res);
+    // userId = user._id;
   }
   if (userRequest.trim().length === 0) {
     // twimlMsg.message("Please enter a valid prompt.");
