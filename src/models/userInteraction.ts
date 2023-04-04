@@ -1,19 +1,20 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, ObjectId } from "mongoose";
 
 export interface UserInteractionInterface extends Document {
   userPhoneNumber: {
-    type: string,
-    required: true,
-  },
+    type: string;
+    required: true;
+  };
   userMessage: {
-    type: string,
-    required: true,
-  },
-  chatGptResponse: string,
+    type: string;
+    required: true;
+  };
+  chatGptResponse: string;
   interactionDate: {
-    type: string,
-    required: true,
-  },
+    type: string;
+    required: true;
+  };
+  userId: ObjectId;
 }
 
 const UserInteractionSchema: Schema = new Schema({
@@ -30,6 +31,10 @@ const UserInteractionSchema: Schema = new Schema({
     type: String,
     required: true,
   },
+  userId: { type: Schema.Types.ObjectId, ref: "User" },
 });
 
-export default model<UserInteractionInterface>('UserInteraction', UserInteractionSchema);
+export default model<UserInteractionInterface>(
+  "UserInteraction",
+  UserInteractionSchema
+);

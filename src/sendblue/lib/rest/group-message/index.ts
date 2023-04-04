@@ -30,7 +30,7 @@ export class Groups {
     })
 
     if (this.client.logLevel === 'debug')
-      console.log('Response:', responseData)
+      console.log('📢📢 Response:', responseData)
 
     return MessageImpl.from(responseData)
   }

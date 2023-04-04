@@ -18,29 +18,16 @@ export interface UserInterface extends Document {
 const UserSchema: Schema = new Schema({
   firstName: String,
   lastName: String,
-  phoneNumber: {
-    type: String,
-    required: true,
-  },
-  tier: {
-    type: String,
-    required: true,
-  },
-  messageCount: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
+  phoneNumber: String,
+  tier: String,
+  messageCount: Number,
   fromCity: String,
   fromState: String,
   fromZip: String,
   signUpDate: String,
   userEmail: String,
   password: String,
-  stripeId: {
-    type: String,
-    required: true,
-  },
+  stripeId: String,
 });
 
 export default model<UserInterface>("User", UserSchema);

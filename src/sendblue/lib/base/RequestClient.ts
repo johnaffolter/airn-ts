@@ -73,8 +73,8 @@ export class RequestClient {
       const response = await this.axios.request(options)
 
       if (opts.logLevel === 'debug') {
-        console.log(`response.statusCode: ${response.status}`)
-        console.log(`response.headers: ${JSON.stringify(response.headers)}`)
+        console.log(`🔔🔔 response.statusCode: ${response.status}`)
+        console.log(`🔔🔔 response.headers: ${JSON.stringify(response.headers)}`)
       }
 
       return response.data
@@ -98,12 +98,12 @@ export class RequestClient {
   }
 
   logRequest (options: AxiosRequestConfig) {
-    console.log('-- BEGIN Sendblue API Request --')
-    console.log(`${options.method} ${options.baseURL}${options.url}`)
+    console.log('-🟢- BEGIN Sendblue API Request -🟢-')
+    console.log(`🔔🔔 ${options.method} ${options.baseURL}${options.url}`)
 
     if (options.params) {
       console.log('Querystring:')
-      console.log(options.params)
+      console.log(`🔔🔔 ${options.params}`)
     }
 
     if (options.headers) {
@@ -114,6 +114,6 @@ export class RequestClient {
       )
     }
 
-    console.log('-- END Sendblue API Request --')
+    console.log('-🔴- END Sendblue API Request -🔴-')
   }
 }
