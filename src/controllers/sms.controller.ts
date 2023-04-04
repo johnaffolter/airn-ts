@@ -1,15 +1,17 @@
 import express from "express";
-import twilio from "twilio";
+// import twilio from "twilio";
 import { Configuration, OpenAIApi } from "openai";
 import SendblueClient from "../sendblue/lib";
 
 import {
-  updateOrCreateUserFromText,
+  updateUserMsgCount,
   createNewUserInteraction,
+  createNewUser,
+  checkMessageCount,
 } from "../controllers/users.controller";
 import User from "../models/user";
 
-const twiml = twilio.twiml;
+// const twiml = twilio.twiml;
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,15 +26,17 @@ const sendblueClient = new SendblueClient(
 const openai = new OpenAIApi(configuration);
 
 export const post = async (req: express.Request, res: express.Response) => {
-  console.log("🚀🚀🚀🚀 ~ file: sms.controller.js:16 ~ post ~ req:", req);
-  const twimlMsg = new twiml.MessagingResponse();
+  // const twimlMsg = new twiml.MessagingResponse();
   const userRequest = req.body.content || "";
   const userPhoneNumber = req.body.number;
-  console.log(
-    "🚀🚀🚀🚀 ~ file: sms.controller.js:14 ~ post ~ req.body:",
-    req.body
-  );
+  const query = User.where({ phoneNumber: userPhoneNumber });
+  const user = await query.findOne();
+  let userId = user._id;
 
+  if (!user) {
+    let user = await createNewUser(req, res);
+    userId = user._id;
+  }
   if (userRequest.trim().length === 0) {
     // twimlMsg.message("Please enter a valid prompt.");
     // res.type("text/xml").send(twimlMsg.toString());
@@ -44,53 +48,55 @@ export const post = async (req: express.Request, res: express.Response) => {
     );
   } else {
     try {
-      const response = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
-        max_tokens: 3000,
-        n: 1,
-        messages: [
-          { role: "system", content: `You are a helpful life coach.` },
-          { role: "user", content: `${userRequest}` },
-        ],
-        temperature: 0.3,
-      });
+      if (checkMessageCount(user)) {
+        const response = await openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          max_tokens: 3000,
+          n: 1,
+          messages: [
+            { role: "system", content: `You are a helpful life coach.` },
+            { role: "user", content: `${userRequest}` },
+          ],
+          temperature: 0.3,
+        });
 
-      const chatGptResponse: string =
-        response.data.choices[0].message.content ||
-        "No Response From ChatGPT 😔 😔 😔 ";
-      console.log(
-        "🚀🚀🚀🚀 ~ file: sms.controller.js:44 ~ post ~ chatGptResponse:",
-        chatGptResponse
-      );
-      // TODO: few shot learning logic here then respond after
-      res.type("text/xml").send(
-        sendblueClient.sendMessage({
-          number: userPhoneNumber,
-          content: chatGptResponse,
-        })
-      );
-      // twimlMsg.message(chatGptResponse);
-      // res.type("text/xml").send(twiml.toString());
-
-      const userInteraction = {
-        userPhoneNumber: userPhoneNumber,
-        userMessage: userRequest,
-        chatGptResponse: chatGptResponse,
-        interactionDate: new Date().toString(),
-      };
-
-      createNewUserInteraction(userInteraction);
-      updateOrCreateUserFromText(req.body);
-    } catch (err) {
-      if (err.response) {
-        console.error(err.response.status, err.response.data);
+        const chatGptResponse: string =
+          response.data.choices[0].message.content ||
+          "No Response From ChatGPT 😔 😔 😔 ";
+        // TODO: few shot learning logic here then respond after
         res.type("text/xml").send(
           sendblueClient.sendMessage({
             number: userPhoneNumber,
-            content: `${err.response.status + err.response.data}`,
+            content: chatGptResponse,
           })
         );
-        
+        // twimlMsg.message(chatGptResponse);
+        // res.type("text/xml").send(twiml.toString());
+        const userInteraction = {
+          userPhoneNumber: userPhoneNumber,
+          userMessage: userRequest,
+          chatGptResponse: chatGptResponse,
+          interactionDate: new Date().toString(),
+          userId: userId,
+        };
+
+        createNewUserInteraction(userInteraction);
+        updateUserMsgCount(userPhoneNumber);
+      } else {
+        res.type("text/xml").send(
+          sendblueClient.sendMessage({
+            number: userPhoneNumber,
+            content: "Reached message limit. Please purchase a higher plan",
+          })
+        );
+      }
+    } catch (err) {
+      if (err.response) {
+        console.error(err.response.status, err.response.data);
+        sendblueClient.sendMessage({
+          number: userPhoneNumber,
+          content: `${err.response.status + err.response.data}`,
+        });
         // twimlMsg.message(err.response.status + err.response.data);
         // res.type("text/xml").send(twimlMsg.toString());
       } else {

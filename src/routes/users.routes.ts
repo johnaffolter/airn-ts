@@ -2,6 +2,7 @@ import express from "express";
 import {
   getUsers,
   getUserInteractions,
+  getSingleUserInteractions,
   getSingleUser,
   createNewUser,
   updateSingleUser,
@@ -14,6 +15,8 @@ const usersRouter = express.Router();
 usersRouter.get("/", getUsers);
 
 usersRouter.get("/interactions", getUserInteractions);
+
+usersRouter.get("/interactions/:id", getSingleUserInteractions);
 
 usersRouter.get("/:id", getSingleUser);
 

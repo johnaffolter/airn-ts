@@ -30,13 +30,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"));
 
-app.use("/api/users", usersRouter);
+app.use("/v1/users", usersRouter);
 
-app.use("/api/sms", smsRouter);
+app.use("/v1/sms", smsRouter);
 
-app.use("/api/voice", voiceRouter);
+app.use("/v1/voice", voiceRouter);
 
-app.use("/api/payments", paymentsRouter);
+app.use("/v1/payments", paymentsRouter);
 
 app.get("/", (req: express.Request, res: express.Response) => {
   const filePath = path.join(__dirname, "views", "welcome.html");

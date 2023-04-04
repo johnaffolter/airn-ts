@@ -6,10 +6,6 @@ import User from "../models/user";
 import UserInteraction from "../models/userInteraction";
 import { createStripeCustomer } from "./payments.controller";
 
-interface ReqBody {
-  number: string;
-}
-
 // const password: string = "mypass123";
 // const saltRounds: number = 10;
 
@@ -116,6 +112,7 @@ export const getSingleUserByPhoneNumber = async (phoneNumber: string) => {
   try {
     const user = await User.findOne({ phoneNumber: phoneNumber });
     console.log("FETCHED SINGLE USER!");
+    return user;
   } catch (err) {
     console.error("ERROR FETCHING SINGLE USER");
     console.error(err.message);
@@ -136,6 +133,7 @@ export const getUserInteractions = async (
         userMessage: interaction.userMessage,
         chatGptResponse: interaction.chatGptResponse,
         interactionDate: interaction.interactionDate,
+        userId: interaction.userId
       })),
     });
     console.log("FETCHED USER INTERACTIONS");
@@ -143,6 +141,35 @@ export const getUserInteractions = async (
     console.error("ERROR FETCHING USER INTERACTIONS");
     console.error(err.message);
     res.status(500).json({ message: "Failed to load user interactions." });
+  }
+};
+
+export const getSingleUserInteractions = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  console.log("TRYING TO FETCH SINGLE USER'S INTERACTIONS!");
+  try {
+    const usersInteractions = await UserInteraction.find({
+      userId: req.params.id,
+    });
+    console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:156 ~ usersInteractions:", usersInteractions)
+    res.status(200).json({
+      usersInteractions: usersInteractions.map((interaction) => ({
+        userPhoneNumber: interaction.userPhoneNumber,
+        userMessage: interaction.userMessage,
+        chatGptResponse: interaction.chatGptResponse,
+        interactionDate: interaction.interactionDate,
+        userId: interaction.userId,
+      })),
+    });
+    console.log("FETCHED SINGLE USER'S INTERACTIONS!");
+  } catch (err) {
+    console.error("ERROR FETCHING SINGLE USER'S INTERACTIONS!");
+    console.error(err.message);
+    res
+      .status(500)
+      .json({ message: "Failed to load single user's interactions." });
   }
 };
 
@@ -216,11 +243,11 @@ export const createNewUser = async (
   req: express.Request,
   res: express.Response
 ) => {
-  console.log("TRYING TO STORE USER");
+  console.log("💾💾 TRYING TO CREATE A NEW USER");
   const user = new User({
     firstName: req.body.firstName || "N/A",
     lastName: req.body.lastName || "N/A",
-    phoneNumber: req.body.phoneNumber || req.body.number,
+    phoneNumber: req.body.number || req.body.phoneNumber,
     tier: "Free",
     messageCount: 0,
     fromCity: req.body.fromCity || "N/A",
@@ -230,8 +257,7 @@ export const createNewUser = async (
     userEmail: req.body.userEmail || `${uuidv4()}@life-coach-airn.com`,
     stripeId: req.body.stripeId || "N/A",
   });
-  console.log("CREATE NEW USER IN MONGO");
-
+  console.log("💾💾 CREATED NEW USER IN MONGO NOW TRYING STRIPE");
   try {
     const newStripeCustomer = await createStripeCustomer(user);
     user.stripeId = newStripeCustomer.id;
@@ -253,9 +279,10 @@ export const createNewUser = async (
         stripeId: user.stripeId,
       },
     });
-    console.log("CREATE NEW USER IN MONGO AND STRIPE!");
+    console.log("💾💾 CREATE NEW USER IN MONGO AND STRIPE!");
+    return user;
   } catch (err) {
-    console.error("ERROR STORING NEW USER");
+    console.error("💾💾 ERROR STORING NEW USER");
     console.error(err.message);
     res.status(500).json({ message: "Failed to save user." });
   }
@@ -265,89 +292,53 @@ export const deleteUser = async (
   req: express.Request,
   res: express.Response
 ) => {
-  console.log("TRYING TO DELETE USER");
+  console.log("💾💾 TRYING TO DELETE USER");
   try {
     await User.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "Deleted user!" });
-    console.log("DELETED USER");
+    console.log("💾💾 DELETED USER");
   } catch (err) {
-    console.error("ERROR FETCHING USERS");
+    console.error("💾💾 ERROR FETCHING USERS");
     console.error(err.message);
     res.status(500).json({ message: "Failed to delete user." });
   }
 };
 
 export const createNewUserInteraction = async (userInteraction: any) => {
-  console.log("TRYING TO STORE USER MESSAGE");
-  const { userPhoneNumber, userMessage, chatGptResponse } = userInteraction;
+  console.log("💾💾 TRYING TO STORE NEW USER INTERACTION");
+  const { userPhoneNumber, userMessage, chatGptResponse, userId } =
+    userInteraction;
 
   const newUserInteraction = new UserInteraction({
     userPhoneNumber: userPhoneNumber,
     userMessage: userMessage,
     chatGptResponse: chatGptResponse,
     interactionDate: new Date().toString(),
+    userId: userId,
   });
 
   try {
     await newUserInteraction.save();
-    console.log("STORED NEW USER INTERACTION");
+    console.log("💾💾 STORED NEW USER INTERACTION");
   } catch (err) {
-    console.error("ERROR STORING NEW USER INTERACTION");
+    console.error("💾💾 ERROR STORING NEW USER INTERACTION");
     console.error(err.message);
   }
 };
 
-export const updateOrCreateUserFromText = async (reqBody: ReqBody) => {
-  console.log("TRYING TO UPDATE USER FROM TEXT MESSAGE");
-  const { number } = reqBody;
-
+export const updateUserMsgCount = async (phoneNumber: string) => {
+  console.log("💾💾 TRYING TO UPDATE USER MSG COUNT");
   try {
-    const user: any = User.findOne({ phoneNumber: number });
-    console.log(
-      "🚀🚀🚀🚀 ~ file: users.controller.ts:313 ~ updateOrCreateUserFromText ~ user:",
-      user || "NO USER"
+    const user = await User.findOneAndUpdate(
+      { phoneNumber: phoneNumber },
+      { $inc: { messageCount: 1 } },
+      {
+        new: true,
+      }
     );
-
-    if (!user) {
-      // create a user
-      const user = new User({
-        firstName: "N/A",
-        lastName: "N/A",
-        phoneNumber: number,
-        tier: "Free",
-        messageCount: 1,
-        fromCity: "N/A",
-        fromState: "N/A",
-        fromZip: "N/A",
-        signUpDate: new Date(),
-        userEmail: `${uuidv4()}@life-coach-airn.com`,
-        stripeId: "N/A",
-      });
-      const newStripeCustomer: any = createStripeCustomer(user);
-      user.stripeId = newStripeCustomer.id;
-      const new_user = await user.save();
-      console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:329 ~ updateOrCreateUserFromText ~ new_user:", new_user)
-      console.log("CREATED NEW USER IN MONGO & STRIPE VIA updateOrCreateUserFromText");
-    } else if (!user.stripeId || user.stripeId === "N/A") {
-      const newStripeCustomer: any = createStripeCustomer(user);
-      user.stripeId = newStripeCustomer.id;
-      user.messageCount = user.messageCount += 1;
-      const updated_user = await user.save();
-      console.log(
-        "🚀🚀🚀🚀 ~ file: users.controller.ts:346 ~ updateOrCreateUserFromText ~ STRIPE ID - updated_user:",
-        updated_user
-      );
-      console.log(
-        "UPDATED USER MSG COUNT & CREATED STRIPE CUSTOMER FROM TEXT MESSAGE"
-      );
-    } else {
-      user.messageCount = user.messageCount += 1;
-      const updated_user = await user.save();
-      console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:346 ~ updateOrCreateUserFromText ~ updated_user:", updated_user)
-      console.log("UPDATED USER MSG COUNT FROM TEXT MESSAGE");
-    }
+    console.log("💾💾 UPDATED USER MSG COUNT");
   } catch (err) {
-    console.error("ERROR UPDATING USER FROM TEXT MESSAGE");
+    console.error("💾💾 ERROR UPDATING USER MESSAGE COUNT");
     console.error(err.message);
   }
 };
@@ -356,22 +347,18 @@ export const updateUserTierLevel = async (
   req: express.Request,
   res: express.Response
 ) => {
-  console.log(
-    "🚀🚀🚀🚀 ~ file: users.controller.js:150 ~ updateUserTierLevel ~ req:",
-    req
-  );
-  console.log("TRYING TO UPDATE USER TIER LEVEL");
-  const userID = req.params.id;
+  console.log("💾💾 TRYING TO UPDATE USER TIER LEVEL");
+  const userId = req.params.id;
   const userTierLevel = req.body.tier;
 
   if (!userTierLevel || userTierLevel.trim().length === 0) {
-    console.log("INVALID INPUT - NO TEXT");
+    console.log("💾💾 INVALID INPUT - NO TEXT");
     return res.status(422).json({ message: "Invalid user info." });
   }
 
   try {
     const user = await User.findOneAndUpdate(
-      { _id: userID },
+      { _id: userId },
       {
         tier: userTierLevel,
       },
@@ -394,9 +381,9 @@ export const updateUserTierLevel = async (
         stripeId: user.stripeId,
       },
     });
-    console.log("UPDATED USER TIER LEVEL");
+    console.log("💾💾 UPDATED USER TIER LEVEL");
   } catch (err) {
-    console.error("ERROR UPDATING USER TIER LEVEL");
+    console.error("💾💾 ERROR UPDATING USER TIER LEVEL");
     console.error(err.message);
     res.status(500).json({ message: "Failed to update user tier level." });
   }
