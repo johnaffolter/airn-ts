@@ -12,7 +12,7 @@ import paymentsRouter from "./routes/payments.routes";
 dotenv.config();
 
 const app: Express = express();
-const PORT: number = 80;
+const PORT: number = 3000
 
 app.use(morgan("dev"));
 
