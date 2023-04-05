@@ -1,18 +1,21 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import { jsonwebtoken as jwt } from "jsonwebtoken";
+import jsonwebtoken from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 
 import User from "../models/user";
 import UserInteraction from "../models/userInteraction";
 import { createStripeCustomer } from "./payments.controller";
 
-
 export const userSignUp = (req: express.Request, res: express.Response) => {
   const { password, userEmail, phoneNumber } = req.body;
   bcrypt
     .hash(password, 10)
     .then(async (hashedPassword) => {
+      console.log(
+        "🚀🚀🚀🚀 ~ file: users.controller.ts:15 ~ .then ~ hashedPassword:",
+        hashedPassword
+      );
       // find a user from db
       const user = await User.findOne({ phoneNumber: phoneNumber });
       if (user) {
@@ -60,48 +63,40 @@ export const userSignUp = (req: express.Request, res: express.Response) => {
     });
 };
 
-export const userLogin = async (req: express.Request, res: express.Response) => {
-  const { userEmail, password } = req.body;
-  console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:98 ~ userLogin ~ password:", password)
-  User.findOne({ userEmail: userEmail })
-    .then(async (user) => {
-      console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:101 ~ .then ~ user:", user.password)
-      await bcrypt
-        .compare(password, user.password)
-        .then((passwordCheck) => {
-          if (!passwordCheck) {
-            return res.status(400).send({
-              message: "Password Check does not match",
-              Error,
-            });
-          }
-          const token = jwt.sign(
-            {
-              userId: user._id,
-              userEmail: user.userEmail,
-            },
-            "RANDOM-TOKEN",
-            { expiresIn: "24h" }
-          );
-          res.status(200).send({
-            message: "Login Successful",
-            userEmail: user.userEmail,
-            token,
-          });
-        })
-        .catch((Error) => {
-          res.status(400).send({
-            message: "Passwords do not match",
-            Error,
-          });
-        });
-    })
-    .catch((error) => {
-      res.status(404).send({
-        message: "Email not found",
-        error,
+export const userLogin = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  const { userEmail, password, phoneNumber } = req.body;
+  let queryType = userEmail ? { userEmail: userEmail } : { phoneNumber: phoneNumber };
+  const query = User.where(queryType);
+  const user = await query.findOne();
+  bcrypt.compare(password, user.password, function (err: any, result: boolean) {
+    if (err) {
+      return res.status(400).send({
+        message: "Password Check does not match",
+        Error,
       });
-    });
+    }
+
+    if (result) {
+      const token = jsonwebtoken.sign(
+        {
+          userId: user._id,
+          userEmail: user.userEmail,
+        },
+        "RANDOM-TOKEN",
+        { expiresIn: "24h" }
+      );
+      res.status(200).send({
+        message: "Login Successful",
+        userEmail: user.userEmail,
+        token,
+      });
+    } else {
+      return res.json({ success: false, message: "passwords do not match" });
+    }
+  });
 };
 
 export const getUsers = async (req: express.Request, res: express.Response) => {
@@ -228,7 +223,7 @@ export const updateSingleUser = async (
   const userLastName = req.body.lastName || "N/A";
   const userPhoneNumber = req.body.phoneNumber || "N/A";
   const userTierLevel = req.body.tier;
-  const userMessageCount = req.body.messageCount || "N/A";
+  const userMessageCount = req.body.messageCount;
   const userFromCity = req.body.fromCity || "N/A";
   const userFromState = req.body.fromState || "N/A";
   const userFromZip = req.body.fromZip || "N/A";

@@ -4,20 +4,24 @@ export interface UserInterface extends Document {
   firstName: string;
   lastName: string;
   phoneNumber: {
-    type: string,
-    unique: [true, "Phone Number Exist"],
+    type: string;
+    unique: [true, "Phone Number Exist"];
   };
-  tier: string
+  tier: string;
   messageCount: number;
   fromCity: string;
   fromState: string;
   fromZip: string;
   signUpDate: string;
   userEmail: {
-    type: string,
-    unique: [true, "Email Exist"],
+    type: string;
+    unique: [true, "Email Exist"];
   };
-  password: string;
+  password: {
+    type: string;
+    unique: [true, "Phone Number Exist"];
+    maxLength: 255
+  };
   stripeId: string;
 }
 
