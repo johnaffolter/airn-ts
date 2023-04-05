@@ -7,7 +7,6 @@ import User from "../models/user";
 import UserInteraction from "../models/userInteraction";
 import { createStripeCustomer } from "./payments.controller";
 
-
 export const userSignUp = (req: express.Request, res: express.Response) => {
   const { password, userEmail, phoneNumber } = req.body;
   bcrypt
@@ -60,12 +59,21 @@ export const userSignUp = (req: express.Request, res: express.Response) => {
     });
 };
 
-export const userLogin = async (req: express.Request, res: express.Response) => {
+export const userLogin = async (
+  req: express.Request,
+  res: express.Response
+) => {
   const { userEmail, password } = req.body;
-  console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:98 ~ userLogin ~ password:", password)
+  console.log(
+    "🚀🚀🚀🚀 ~ file: users.controller.ts:98 ~ userLogin ~ password:",
+    password
+  );
   User.findOne({ userEmail: userEmail })
     .then(async (user) => {
-      console.log("🚀🚀🚀🚀 ~ file: users.controller.ts:101 ~ .then ~ user:", user.password)
+      console.log(
+        "🚀🚀🚀🚀 ~ file: users.controller.ts:101 ~ .then ~ user:",
+        user.password
+      );
       await bcrypt
         .compare(password, user.password)
         .then((passwordCheck) => {
@@ -228,7 +236,7 @@ export const updateSingleUser = async (
   const userLastName = req.body.lastName || "N/A";
   const userPhoneNumber = req.body.phoneNumber || "N/A";
   const userTierLevel = req.body.tier;
-  const userMessageCount = req.body.messageCount || "N/A";
+  const userMessageCount = req.body.messageCount;
   const userFromCity = req.body.fromCity || "N/A";
   const userFromState = req.body.fromState || "N/A";
   const userFromZip = req.body.fromZip || "N/A";

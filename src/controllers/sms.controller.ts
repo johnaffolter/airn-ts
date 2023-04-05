@@ -31,7 +31,6 @@ export const post = async (req: express.Request, res: express.Response) => {
   const userPhoneNumber = req.body.number;
   const query = User.where({ phoneNumber: userPhoneNumber });
   const user = await query.findOne();
-  let userId = user._id;
 
   if (!user) {
     res.type("text/xml").send(
@@ -40,8 +39,6 @@ export const post = async (req: express.Request, res: express.Response) => {
         content: "Please visit Enter_link_to_website to sign up",
       })
     );
-    // let user = await createNewUser(req, res);
-    // userId = user._id;
   }
   if (userRequest.trim().length === 0) {
     // twimlMsg.message("Please enter a valid prompt.");
@@ -83,7 +80,7 @@ export const post = async (req: express.Request, res: express.Response) => {
           userMessage: userRequest,
           chatGptResponse: chatGptResponse,
           interactionDate: new Date().toString(),
-          userId: userId,
+          userId: user._id,
         };
 
         createNewUserInteraction(userInteraction);
